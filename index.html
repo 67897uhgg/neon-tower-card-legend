@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>霓虹塔防：卡牌傳奇</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="game-container">
+  <!-- 主選單 -->
+  <div id="main-menu" class="screen active">
+    <h1 class="neon-text game-logo" style="font-size: 42px; margin-bottom: 4px;">霓虹塔防：卡牌傳奇</h1>
+    <div class="game-subtitle">NEON DEFENSE // CARD LEGEND</div>
+    <p>關卡進度: <span id="current-level-display">1</span> / <span id="max-level-display">100</span> | 金幣: <span id="gold-display">1000</span></p>
+    <p id="mode-label" class="game-subtitle" style="font-size:14px;">一般模式</p>
+    <button class="btn" onclick="startBattle()">戰鬥開始</button>
+    <button class="btn" onclick="openScreen('equip-menu')">裝備卡牌 (<span id="equip-count">0</span>/5)</button>
+    <button class="btn" onclick="openScreen('upgrade-menu')">功能升級</button>
+    <button class="btn" onclick="openScreen('gacha-menu')">卡牌募集</button>
+    <!-- 全部100張一般卡牌收集後，只在螢幕中央出現一次 -->
+    <div id="mystery-animation-overlay" aria-label="神秘套組抽卡動畫">
+      <div id="mystery-pack" onclick="openMysteryPackage()" role="button" aria-label="開啟神秘套組">
+        <div class="mystery-pack-symbol">✦</div>
+        <div class="mystery-pack-title">神秘套組</div>
+        <div class="mystery-pack-tip">點擊抽取</div>
+      </div>
+      <div id="mystery-result" style="display:none; text-align:center;">
+        <div class="mystery-result-card">
+          <div class="mystery-result-icon">🌌</div>
+          <h2 class="neon-text" style="margin:8px 0;">神秘套組已抽出</h2>
+          <p>闇黑卡池解鎖</p>
+          <p>第 101～200 關・超難模式解鎖</p>
+          <div class="mystery-result-note">一般卡牌背包已清空，之後只使用闇黑卡牌。</div>
+        </div>
+      </div>
+    </div>
+
+<div class="neon-text" style="font-size:22px;">神秘套組</div>
+      <button class="btn" onclick="openMysteryPackage()">開啟神秘卡包</button>
+    </div>
+    <div style="margin-top:22px; width:min(620px,86%);">
+      <details>
+        <summary style="cursor:pointer; color:#9efaff;">輸入路代碼</summary>
+        <div style="margin-top:10px;">
+          <input id="route-code" type="text" placeholder="輸入路代碼" style="padding:10px; border-radius:8px; border:1px solid #00f3ff; background:#080812; color:#fff;">
+          <button class="btn" style="padding:8px 14px; font-size:14px;" onclick="submitRouteCode()">確認</button>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- 裝備卡牌選單 -->
+  <div id="equip-menu" class="screen">
+    <h2 class="neon-text">選擇裝備卡牌 (最多5張)</h2>
+    <div class="panel neon-border">
+      <div id="equip-card-list" class="grid-list"></div>
+    </div>
+    <button class="btn" onclick="openScreen('main-menu')">返回主選單</button>
+  </div>
+
+  <!-- 功能升級選單 -->
+  <div id="upgrade-menu" class="screen">
+    <h2 class="neon-text">天賦功能升級</h2>
+    <div class="panel neon-border">
+      <div id="upgrade-list" class="grid-list"></div>
+    </div>
+    <button class="btn" onclick="openScreen('main-menu')">返回主選單</button>
+  </div>
+
+  <!-- 抽卡選單 -->
+  <div id="gacha-menu" class="screen">
+    <div class="panel neon-border gacha-panel">
+      <div class="gacha-content">
+        <h2 class="neon-text" style="font-size:34px; margin:0 0 4px;">✦ <span id="gacha-title-mode">卡牌募集中心</span> ✦</h2>
+        <p id="gacha-description" style="color:#a8b4d8; margin-top:6px;">選擇你的卡池，召喚專屬霓虹塔防力量</p>
+        <p>💰 當前金幣：<span id="gacha-gold-display">0</span></p>
+
+        <div class="gacha-cards">
+          <div class="gacha-card control" style="color:var(--neon-cyan);">
+            <div class="gacha-icon">🌀</div>
+            <div class="gacha-title">控場型卡池</div>
+            <div>減速、控制、掌握戰場節奏</div>
+            <div class="gacha-price">🪙 單抽 100 金幣</div>
+            <div class="gacha-actions">
+              <button class="btn gacha-btn" onclick="triggerGacha('control', 1)">🎴 單抽 ×1</button>
+              <button class="btn gacha-btn" onclick="triggerGacha('control', 10)">✨ 十連抽 ×10</button>
+            </div>
+            <div class="gacha-note">每抽 100 金幣</div>
+          </div>
+
+          <div id="dark-gacha-card" class="gacha-card" style="display:none; color:#ff163d; border-color:#ff163d;">
+            <div class="gacha-icon">🕳️</div>
+            <div class="gacha-title">新黑暗卡池</div>
+            <div>30 張專門對抗 101～200 關的暗黑卡牌</div>
+            <div class="gacha-price" style="border-color:#ff163d;color:#ff163d;">🪙 單抽 100 金幣</div>
+            <div class="gacha-actions">
+              <button class="btn gacha-btn" onclick="triggerGacha('control', 1)">🌑 闇抽 ×1</button>
+              <button class="btn gacha-btn" onclick="triggerGacha('attack', 10)">🕳️ 闇抽 ×10</button>
+            </div>
+            <div class="gacha-note">闇黑 UR：黑洞 ✦；星星：銀河 ✦</div>
+          </div>
+
+          <div class="gacha-card attack" style="color:var(--neon-pink);">
+            <div class="gacha-icon">⚡</div>
+            <div class="gacha-title">攻擊型卡池</div>
+            <div>範圍火力、爆發輸出、正面突破</div>
+            <div class="gacha-price">🪙 單抽 100 金幣</div>
+            <div class="gacha-actions">
+              <button class="btn gacha-btn" onclick="triggerGacha('attack', 1)">🎴 單抽 ×1</button>
+              <button class="btn gacha-btn" onclick="triggerGacha('attack', 10)">🔥 十連抽 ×10</button>
+            </div>
+            <div class="gacha-note">每抽 100 金幣</div>
+          </div>
+        </div>
+
+        <button class="btn" onclick="openScreen('main-menu')">↩ 返回主選單</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 戰鬥畫面 -->  <div id="battle-screen" class="screen">
+    <div class="battle-wrap">
+      <div style="margin-bottom: 10px; display:flex; gap:16px; align-items:center; justify-content:center; flex-wrap:wrap;">
+        <span>關卡: <span id="b-level">1</span></span>
+        <span>波數: <span id="b-wave">1</span>/<span id="b-max-wave">5</span></span>
+        <span>金幣: <span id="b-gold">0</span></span>
+        <span id="battle-mode">一般模式</span>
+        <button id="speed-btn" class="btn" style="padding: 4px 12px; font-size: 14px; display: none;" onclick="toggleSpeed()">1x 倍速</button>
+      </div>
+      <div id="battle-stage-label" class="battle-stage-label">草原領地</div>
+      <div id="battle-stats-hint" style="text-align:center;color:#aeb7d8;font-size:12px;margin:-3px 0 8px;">每局 500 金幣｜敵人從左側道路慢慢走到右側｜逃脫 10 隻即敗北｜每 10 關有 Boss</div>
+      <div class="battle-canvas-shell">
+        <canvas id="battle-canvas" width="900" height="540"></canvas>
+      </div>
+      <div class="battle-items">
+        <h3>🧰 戰鬥道具</h3>
+        <div class="item-row">
+          <button class="battle-item" onclick="useBattleItem('missile')">🚀 追蹤飛彈<small>沿道路飛向敵人並造成傷害</small></button>
+          <button class="battle-item" onclick="useBattleItem('freeze')">❄️ 冰霜脈衝<small>短時間減速道路上的敵人</small></button>
+          <button class="battle-item" onclick="useBattleItem('coin')">💰 空投補給<small>立即獲得戰鬥金幣</small></button>
+        </div>
+      </div>
+
+      <!-- 卡牌永遠排在道具格下方：先選牌，再點場上格子召喚 -->
+      <div class="battle-card-panel">
+        <div class="battle-card-header">
+          <h3>🎴 戰鬥卡牌</h3>
+          <span id="battle-card-tip">先點一張卡，再點場上的放置格</span>
+        </div>
+        <div id="battle-card-row" class="battle-card-row"></div>
+      </div>
+
+      <button class="btn" onclick="exitBattle()">退出戰鬥</button>
+    </div>
+  </div>
+
+  <div id="item-effect-overlay"></div>
+
+  <div id="battle-status-overlay">
+    <div id="battle-status-card" class="battle-status-card">
+      <div id="battle-status-title" class="battle-status-title">戰鬥結束</div>
+      <div id="battle-status-text" class="battle-status-text"></div>
+      <button id="battle-status-button" class="btn battle-status-button" onclick="continueAfterBattle()">返回主選單</button>
+    </div>
+  </div>
+
+  <!-- 抽卡動畫全螢幕覆蓋層 -->
+  <div id="gacha-animation-overlay">
+    <div id="card-pack" onclick="unpackCard()" aria-label="點擊開啟卡包"></div>
+    <div id="result-card-display" style="display:none; text-align: center;" onclick="nextGachaResult()">
+      <div id="card-frame" class="neon-border" style="width: 200px; height: 300px; padding: 20px; background: #111; margin: 0 auto;">
+        <h3 id="card-name" class="neon-text">卡牌名稱</h3>
+        <div id="star-container" style="margin: 15px 0;"></div>
+        <p id="card-desc" style="font-size: 14px; color: #ccc;"></p>
+      </div>
+      <p style="margin-top: 15px; color: #888;">(點擊螢幕繼續)</p>
+    </div>
+  </div>
+</div>
+
+<script src="init.js"></script>
+</body>
+</html>
+<script>
+function renderGachaMenu() {
+  const dark = gameState.darkMode;
+  const title=document.getElementById('gacha-title-mode');
+  const desc=document.getElementById('gacha-description');
+  const darkCard=document.getElementById('dark-gacha-card');
+  if(title) title.innerText=dark?'闇黑卡池':'卡牌募集中心';
+  if(desc) desc.innerText=dark?'黑暗系卡牌專為101～200超難模式而生。UR金光將轉為紅色，星星以銀河呈現。':'選擇你的卡池，召喚專屬霓虹塔防力量';
+  if(darkCard) darkCard.style.display=dark?'block':'none';
+}
+</script>
